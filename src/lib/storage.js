@@ -270,3 +270,45 @@ export async function storageStats() {
 if (typeof window !== 'undefined') {
   setTimeout(() => pruneExpiredApiCache().catch(() => {}), 3_000);
 }
+
+// ─── Encrypted storage ────────────────────────────────────────────────────────
+// Wraps setStoredValue/getStoredValue with AES-GCM encryption.
+// Import lazily to avoid loading crypto code unless needed.
+
+/**
+ * Store a value encrypted with a passphrase.
+ * The stored record contains { ciphertext, iv, salt } — no plaintext is persisted.
+ *
+ * @param {string} key
+ * @param {string} plaintext   String value to encrypt (JSON.stringify objects first)
+ * @param {string} passphrase  User-provided passphrase
+ */
+export async function setEncryptedValue(key, plaintext, passphrase) {
+  const { encrypt } = await import('./encryption.js');
+  const encrypted = await encrypt(plaintext, passphrase);
+  await setStoredValue(`enc:${key}`, encrypted);
+}
+
+/**
+ * Retrieve and decrypt a value stored with setEncryptedValue.
+ * Returns null if the key doesn't exist.
+ * Throws if the passphrase is wrong or data is corrupted.
+ *
+ * @param {string} key
+ * @param {string} passphrase
+ * @returns {Promise<string|null>}
+ */
+export async function getEncryptedValue(key, passphrase) {
+  const record = await getStoredValue(`enc:${key}`);
+  if (!record) return null;
+  const { decrypt } = await import('./encryption.js');
+  return decrypt(record.ciphertext, passphrase, record.iv, record.salt);
+}
+
+/**
+ * Remove an encrypted value.
+ * @param {string} key
+ */
+export async function removeEncryptedValue(key) {
+  await removeStoredValue(`enc:${key}`);
+}

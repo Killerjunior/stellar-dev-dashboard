@@ -34,6 +34,7 @@ import { useStore } from "./lib/store";
 import { useTranslation } from "./hooks/useTranslation";
 import { useResponsive } from "./hooks/useResponsive";
 import { initializeErrorReporting, addBreadcrumb } from "./lib/errorReporting";
+import { TourLauncher } from "./components/tutorial";
 
 const ChartsTab = () => {
   const { t } = useTranslation();
@@ -206,6 +207,7 @@ function DashboardLayout() {
             {!connectedAddress ? <ConnectPanel /> : <ActiveComponent />}
           </ErrorBoundary>
         </main>
+        <TourLauncher />
       </div>
     </ErrorBoundary>
   );
