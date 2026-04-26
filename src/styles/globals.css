@@ -740,3 +740,90 @@ a { color: inherit; text-decoration: none; }
 .widget-base::-webkit-scrollbar-thumb:hover {
   background: var(--border-bright);
 }
+
+/* ── Mobile-first responsive additions (#110) ────────────────────────────── */
+
+/* Safe-area insets for notched/island devices */
+@supports (padding: env(safe-area-inset-top)) {
+  .mobile-safe-top    { padding-top:    env(safe-area-inset-top); }
+  .mobile-safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .mobile-safe-left   { padding-left:   env(safe-area-inset-left); }
+  .mobile-safe-right  { padding-right:  env(safe-area-inset-right); }
+}
+
+/* Responsive layout helpers */
+.stack-on-mobile { display: flex; flex-direction: row; gap: 12px; }
+
+@media (max-width: 768px) {
+  .stack-on-mobile {
+    flex-direction: column;
+  }
+
+  /* Tighten content padding on small screens */
+  .dashboard-content {
+    padding: var(--content-padding-mobile) !important;
+  }
+
+  /* Full-width cards on mobile */
+  .card-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Increase touch targets */
+  button, a, [role="button"] {
+    min-height: var(--touch-target);
+  }
+
+  /* Hide desktop-only sidebar; show hamburger */
+  .desktop-sidebar { display: none !important; }
+  .mobile-header   { display: flex !important; }
+
+  /* Allow tables to scroll horizontally */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Adjust font sizes for readability */
+  body { font-size: 14px; }
+}
+
+/* Tablet breakpoint */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dashboard-content {
+    padding: var(--content-padding-tablet) !important;
+  }
+
+  /* Two-column grid on tablet */
+  .card-grid-auto {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* PWA standalone display adjustments */
+@media (display-mode: standalone) {
+  /* Add extra top padding for devices that need it in standalone mode */
+  .app-root {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* Reduced-motion: disable all transitions and animations */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High-contrast mode support */
+@media (forced-colors: active) {
+  :root {
+    --cyan: ButtonText;
+    --border: ButtonBorder;
+    --text-primary: CanvasText;
+    --bg-card: Canvas;
+  }
+}

@@ -10,6 +10,15 @@ export const OPERATION_TYPES = [
   { value: "setOptions", label: "Set Options" },
   { value: "accountMerge", label: "Account Merge" },
   { value: "manageData", label: "Manage Data" },
+  // Extended operation types (#111)
+  { value: "pathPaymentStrictSend", label: "Path Payment (Strict Send)" },
+  { value: "pathPaymentStrictReceive", label: "Path Payment (Strict Receive)" },
+  { value: "claimClaimableBalance", label: "Claim Claimable Balance" },
+  { value: "createClaimableBalance", label: "Create Claimable Balance" },
+  { value: "bumpSequence", label: "Bump Sequence" },
+  { value: "revokeSponsorship", label: "Revoke Sponsorship" },
+  { value: "beginSponsoringFutureReserves", label: "Begin Sponsoring Future Reserves" },
+  { value: "endSponsoringFutureReserves", label: "End Sponsoring Future Reserves" },
 ];
 
 export function createOperation(type, params) {
@@ -93,6 +102,81 @@ export function createOperation(type, params) {
         name: params.name,
         value: params.value || null,
       });
+
+    // ── Extended operations (#111) ──────────────────────────────────────────
+
+    case "pathPaymentStrictSend":
+      return StellarSdk.Operation.pathPaymentStrictSend({
+        sendAsset:
+          params.sendAssetType === "native"
+            ? StellarSdk.Asset.native()
+            : new StellarSdk.Asset(params.sendAssetCode, params.sendAssetIssuer),
+        sendAmount: params.sendAmount,
+        destination: params.destination,
+        destAsset:
+          params.destAssetType === "native"
+            ? StellarSdk.Asset.native()
+            : new StellarSdk.Asset(params.destAssetCode, params.destAssetIssuer),
+        destMin: params.destMin,
+        path: (params.path || []).map(
+          (a) => new StellarSdk.Asset(a.assetCode, a.assetIssuer),
+        ),
+      });
+
+    case "pathPaymentStrictReceive":
+      return StellarSdk.Operation.pathPaymentStrictReceive({
+        sendAsset:
+          params.sendAssetType === "native"
+            ? StellarSdk.Asset.native()
+            : new StellarSdk.Asset(params.sendAssetCode, params.sendAssetIssuer),
+        sendMax: params.sendMax,
+        destination: params.destination,
+        destAsset:
+          params.destAssetType === "native"
+            ? StellarSdk.Asset.native()
+            : new StellarSdk.Asset(params.destAssetCode, params.destAssetIssuer),
+        destAmount: params.destAmount,
+        path: (params.path || []).map(
+          (a) => new StellarSdk.Asset(a.assetCode, a.assetIssuer),
+        ),
+      });
+
+    case "claimClaimableBalance":
+      return StellarSdk.Operation.claimClaimableBalance({
+        balanceId: params.balanceId,
+      });
+
+    case "createClaimableBalance": {
+      const claimants = (params.claimants || []).map(
+        (c) => new StellarSdk.Claimant(c.destination, c.predicate),
+      );
+      return StellarSdk.Operation.createClaimableBalance({
+        asset:
+          params.assetType === "native"
+            ? StellarSdk.Asset.native()
+            : new StellarSdk.Asset(params.assetCode, params.assetIssuer),
+        amount: params.amount,
+        claimants,
+      });
+    }
+
+    case "bumpSequence":
+      return StellarSdk.Operation.bumpSequence({
+        bumpTo: params.bumpTo,
+      });
+
+    case "revokeSponsorship":
+      return StellarSdk.Operation.revokeAccountSponsorship({
+        account: params.account,
+      });
+
+    case "beginSponsoringFutureReserves":
+      return StellarSdk.Operation.beginSponsoringFutureReserves({
+        sponsoredId: params.sponsoredId,
+      });
+
+    case "endSponsoringFutureReserves":
+      return StellarSdk.Operation.endSponsoringFutureReserves({});
 
     default:
       throw new Error(`Unsupported operation type: ${type}`);

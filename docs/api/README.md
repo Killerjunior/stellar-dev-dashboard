@@ -12,6 +12,9 @@ This directory documents the public JavaScript modules exposed by the dashboard.
 | [tutorialSystem.js](./tutorial.md) | Guided tours and contextual help system |
 | [multisig.js](./multisig.md) | Multi-signature transaction coordination |
 | [priceFeed.js](./priceFeed.md) | XLM and asset price feeds |
+| [transactionBuilder.js](./transactionBuilder.md) | Multi-operation transaction builder and simulator |
+| [transactionTemplates.js](./transactionTemplates.md) | Pre-built transaction templates |
+| [import.js / export.js](./dataExport.md) | Dashboard backup, export, and import utilities |
 
 ## Quick Start
 
