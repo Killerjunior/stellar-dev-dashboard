@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useStore } from '../../lib/store'
 import CopyableValue from '../dashboard/CopyableValue'
 import { NETWORKS, updateCustomNetworkConfig } from '../../lib/stellar'
@@ -39,21 +39,21 @@ const NAV_ITEMS = [
 ]
 
 export default function Sidebar({ isMobile = false }) {
-  const { 
-    activeTab, 
-    setActiveTab, 
-    network, 
-    setNetwork, 
-    connectedAddress, 
-    theme, 
+  const {
+    activeTab,
+    setActiveTab,
+    network,
+    setNetwork,
+    connectedAddress,
+    theme,
     toggleTheme,
     isMobileMenuOpen,
-    setMobileMenuOpen
+    setMobileMenuOpen,
   } = useStore()
 
   const handleNavClick = (tabId) => {
     setActiveTab(tabId)
-    setMobileMenuOpen(false) // Close mobile menu after navigation
+    setMobileMenuOpen(false)
   }
 
   const sidebarStyles = {
@@ -64,8 +64,8 @@ export default function Sidebar({ isMobile = false }) {
     display: 'flex',
     flexDirection: 'column',
     position: 'fixed',
-    left: 0, 
-    top: 0, 
+    left: 0,
+    top: 0,
     bottom: 0,
     zIndex: 1000,
     transform: isMobile ? (isMobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
@@ -87,23 +87,16 @@ export default function Sidebar({ isMobile = false }) {
 
   return (
     <>
-      {/* Mobile menu overlay */}
       {isMobile && (
-        <div 
+        <div
           className={`mobile-menu-overlay ${isMobileMenuOpen ? 'open' : ''}`}
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
-      
+
       <aside style={sidebarStyles}>
-        {/* Mobile close button */}
         {isMobile && (
-          <div style={{
-            position: 'absolute',
-            top: '16px',
-            right: '16px',
-            zIndex: 1001,
-          }}>
+          <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 1001 }}>
             <button
               onClick={() => setMobileMenuOpen(false)}
               className="touch-target"
@@ -131,10 +124,7 @@ export default function Sidebar({ isMobile = false }) {
         )}
 
         {/* Logo */}
-        <div style={{
-          padding: '24px 20px 20px',
-          borderBottom: '1px solid var(--border)',
-        }}>
+        <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid var(--border)' }}>
           <div style={{
             fontFamily: 'var(--font-display)',
             fontSize: '18px',
