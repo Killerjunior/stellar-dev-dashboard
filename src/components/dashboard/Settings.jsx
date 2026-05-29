@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSettings } from "../../hooks/useSettings";
+import { useRateLimiter } from "../../hooks/useRateLimiter";
 import { useStore } from "../../lib/store";
 import { getEnvironmentConfig } from "../../lib/config";
 import { saveAlertRule, getAlertRules, deleteAlertRule } from "../../lib/alertRulesDb"; // Import IndexedDB helpers
@@ -45,6 +46,7 @@ export default function Settings() {
     preferences,
     setPreference,
   } = useSettings();
+  const { throttleMode, setMode } = useRateLimiter();
 
   // Custom network profile state (Issue #188)
   const [customProfiles, setCustomProfiles] = useState([]);
@@ -262,6 +264,47 @@ export default function Settings() {
                 </label>
               );
             })}
+          </div>
+          
+          <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
+            <FieldLabel>Request Throttling</FieldLabel>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => setMode('aggressive')}
+                style={{
+                  flex: 1,
+                  padding: "8px",
+                  borderRadius: "var(--radius-sm)",
+                  border: `2px solid ${throttleMode === 'aggressive' ? 'var(--cyan, #06b6d4)' : 'var(--border)'}`,
+                  background: throttleMode === 'aggressive' ? 'rgba(6, 182, 212, 0.1)' : 'var(--bg-elevated)',
+                  color: throttleMode === 'aggressive' ? 'var(--cyan, #06b6d4)' : 'var(--text-secondary)',
+                  fontSize: '12px',
+                  fontWeight: throttleMode === 'aggressive' ? 600 : 400,
+                  cursor: 'pointer',
+                }}
+              >
+                Aggressive
+              </button>
+              <button
+                onClick={() => setMode('conservative')}
+                style={{
+                  flex: 1,
+                  padding: "8px",
+                  borderRadius: "var(--radius-sm)",
+                  border: `2px solid ${throttleMode === 'conservative' ? 'var(--cyan, #06b6d4)' : 'var(--border)'}`,
+                  background: throttleMode === 'conservative' ? 'rgba(6, 182, 212, 0.1)' : 'var(--bg-elevated)',
+                  color: throttleMode === 'conservative' ? 'var(--cyan, #06b6d4)' : 'var(--text-secondary)',
+                  fontSize: '12px',
+                  fontWeight: throttleMode === 'conservative' ? 600 : 400,
+                  cursor: 'pointer',
+                }}
+              >
+                Conservative
+              </button>
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '8px' }}>
+              {throttleMode === 'aggressive' ? 'Maximum throughput, drop overflowing requests' : 'Reduced parallelism, queue requests'}
+            </div>
           </div>
         </div>
       </div>

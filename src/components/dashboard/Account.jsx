@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { useStore } from '../../lib/store'
 import { shortAddress, formatXLM, fetchAccountCreationDate, fetchAccountOffers } from '../../lib/stellar'
-import CopyableValue from './CopyableValue'import useAssetUsdEstimates, { formatEstimatedUsd } from '../../hooks/useAssetUsdEstimates'
+import CopyableValue from './CopyableValue'
+import useAssetUsdEstimates, { formatEstimatedUsd } from '../../hooks/useAssetUsdEstimates'
 
 function formatAsset(assetType, assetCode) {
   if (assetType === 'native') return 'XLM'
