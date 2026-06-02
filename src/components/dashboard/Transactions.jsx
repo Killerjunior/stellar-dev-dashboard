@@ -8,50 +8,7 @@ import SearchFilters from '../search/SearchFilters'
 import useSearch from '../../hooks/useSearch'
 import { usePreferences } from '../../hooks/usePreferences'
 import { applyTransactionFilters, applyOperationFilters } from '../../lib/filters'
-import { exportCsv, flattenTransaction } from '../../utils/export'
-
-function normalizeSearch(value) {
-  return String(value || '').toLowerCase().trim()
-}
-
-function searchableText(values) {
-  return values.filter(Boolean).join(' ').toLowerCase()
-}
-
-function getOperationAccounts(op) {
-  return [
-    op.from,
-    op.to,
-    op.source_account,
-    op.account,
-    op.funder,
-    op.into,
-    op.trustor,
-    op.trustee,
-    op.seller,
-    op.buyer,
-    op.selling_asset_issuer,
-    op.buying_asset_issuer,
-    op.asset_issuer,
-  ].filter(Boolean)
-}
-
-function flattenOperation(op) {
-  return {
-    id: op.id,
-    transaction_hash: op.transaction_hash || '',
-    type: op.type,
-    type_label: getOperationLabel(op.type),
-    created_at: op.created_at,
-    from: op.from || '',
-    to: op.to || '',
-    source_account: op.source_account || '',
-    account: op.account || '',
-    amount: op.amount || '',
-    asset_code: op.asset_code || 'XLM',
-    asset_issuer: op.asset_issuer || '',
-  }
-}
+import TransactionDetail from './TransactionDetail'
 
 export default function Transactions() {
   const {
@@ -79,6 +36,7 @@ export default function Transactions() {
 
   const [view, setView] = useState('transactions')
   const [showFilters, setShowFilters] = useState(false)
+  const [selectedTxHash, setSelectedTxHash] = useState(null)
   const {
     query,
     setQuery,
@@ -388,6 +346,20 @@ export default function Transactions() {
             />
           ) : (
             <>
+              {filteredTransactions.map((tx, i) => (
+                <div key={tx.id} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr auto',
+                  gap: '12px',
+                  alignItems: 'center',
+                  padding: '12px 18px',
+                  borderBottom: i < filteredTransactions.length - 1 ? '1px solid var(--border)' : 'none',
+                  transition: 'var(--transition)',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setSelectedTxHash(tx.hash)}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               {filteredTransactions.map((tx, index) => (
                 <div
                   key={tx.id}
