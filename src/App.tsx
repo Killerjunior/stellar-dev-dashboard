@@ -32,6 +32,7 @@ import ContractABI from './components/dashboard/ContractABI'
 import AdvancedTransactionSimulation from './components/dashboard/AdvancedTransactionSimulation'
 import TransactionSimulator from './components/dashboard/TransactionSimulator'
 import DEXExplorer from './components/dashboard/DEXExplorer'
+import PathExplorer from './components/dashboard/PathExplorer'
 import ExplorerEmbed from './components/dashboard/ExplorerEmbed'
 import RealTimeLedger from './components/dashboard/RealTimeLedger'
 import Analytics from './components/dashboard/Analytics'
@@ -46,8 +47,13 @@ import AdvancedSearch from './components/dashboard/AdvancedSearch'
 import CacheStats from './components/dashboard/CacheStats'
 import LiveActivityFeed from './components/dashboard/LiveActivityFeed'
 import ClaimableBalances from './components/dashboard/ClaimableBalances'
+import DataExport from './components/dashboard/DataExport'
 import RealTimeNotificationCenter from './components/notifications/RealTimeNotificationCenter'
 import { useRealTimeNotifications } from './hooks/useRealTimeNotifications'
+import { Webhooks } from './components/dashboard/Webhooks'
+import { LearningHub } from './components/dashboard/LearningHub'
+import { HardwareWalletSecurity } from './components/dashboard/HardwareWalletSecurity'
+import { TemplateLibrary } from './components/dashboard/TemplateLibrary'
 import { pruneCaches } from './lib/cacheManager'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useStore } from './lib/store'
@@ -63,6 +69,7 @@ import { TourLauncher } from './components/tutorial'
 import SearchBar from './components/layout/SearchBar'
 import GlobalSearch from './components/search/GlobalSearch'
 import UserPreferences from './components/preferences/UserPreferences'
+import NetworkIndicator from './components/layout/NetworkIndicator'
 import MobileNavigation from './components/layout/MobileNavigation'
 import KeyboardNavigation from './components/accessibility/KeyboardNavigation'
 import { useSwipeGesture } from './hooks/useSwipeGesture'
@@ -113,6 +120,7 @@ const TABS: Record<string, TabComponent> = {
   contractInteraction: ContractInteraction,
   contractABI: ContractABI,
   dex: DEXExplorer,
+  pathExplorer: PathExplorer,
   explorers: ExplorerEmbed,
   realtime: RealTimeLedger,
   charts: ChartsTab,
@@ -128,6 +136,7 @@ const TABS: Record<string, TabComponent> = {
   cacheStats: CacheStats,
   liveActivity: LiveActivityFeed,
   claimableBalances: ClaimableBalances,
+  dataExport: DataExport,
 }
 
 function NotificationBell({ onClick, bottomOffset = '20px' }: { onClick: () => void; bottomOffset?: string }) {
@@ -321,6 +330,8 @@ function DashboardLayout() {
 
   return (
     <ErrorBoundary onRetry={handleRetry} maxRetries={3}>
+      <OfflineBanner />
+      <PWAInstallBanner />
       <div
         style={{
           display: 'flex',
@@ -336,6 +347,9 @@ function DashboardLayout() {
           <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ flex: 1 }}>
               <GlobalSearch onSelectResult={handleSearchResult} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <NetworkIndicator />
             </div>
             <button
               onClick={() => setPreferencesOpen(true)}
@@ -426,14 +440,14 @@ function RouterSync() {
 
 export default function App() {
   return (
-    <AccessibilityProvider>
-      <I18nProvider>
-        <RouterSync />
-        <Routes>
-          <Route path="/connect" element={<DashboardLayout />} />
-          <Route path="/*" element={<DashboardLayout />} />
-        </Routes>
-      </I18nProvider>
+    <I18nProvider>
+      <AccessibilityProvider>
+      <RouterSync />
+      <Routes>
+        <Route path="/connect" element={<DashboardLayout />} />
+        <Route path="/*" element={<DashboardLayout />} />
+      </Routes>
     </AccessibilityProvider>
+    </I18nProvider>
   )
 }
