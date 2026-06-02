@@ -29,6 +29,7 @@ import ContractABI from './components/dashboard/ContractABI'
 import AdvancedTransactionSimulation from './components/dashboard/AdvancedTransactionSimulation'
 import TransactionSimulator from './components/dashboard/TransactionSimulator'
 import DEXExplorer from './components/dashboard/DEXExplorer'
+import PathExplorer from './components/dashboard/PathExplorer'
 import ExplorerEmbed from './components/dashboard/ExplorerEmbed'
 import RealTimeLedger from './components/dashboard/RealTimeLedger'
 import Analytics from './components/dashboard/Analytics'
@@ -108,6 +109,7 @@ const TABS: Record<string, TabComponent> = {
   contractInteraction: ContractInteraction,
   contractABI: ContractABI,
   dex: DEXExplorer,
+  pathExplorer: PathExplorer,
   explorers: ExplorerEmbed,
   realtime: RealTimeLedger,
   charts: ChartsTab,
