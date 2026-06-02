@@ -1,8 +1,9 @@
-import React, { useEffect, useState, type ComponentType, type CSSProperties } from 'react'
+import React, { useEffect, useState, useCallback, type ComponentType, type CSSProperties } from 'react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { I18nProvider } from './components/I18nProvider'
 import './i18n/index.js'
 import './styles/responsive.css';
+import './styles/mobile-performance.css';
 import { AccessibilityProvider } from './context/AccessibilityContext';
 
 import Sidebar from './components/layout/Sidebar'
@@ -64,6 +65,7 @@ import GlobalSearch from './components/search/GlobalSearch'
 import UserPreferences from './components/preferences/UserPreferences'
 import MobileNavigation from './components/layout/MobileNavigation'
 import KeyboardNavigation from './components/accessibility/KeyboardNavigation'
+import { useSwipeGesture } from './hooks/useSwipeGesture'
 
 interface SearchResult {
   type?: string
@@ -128,7 +130,7 @@ const TABS: Record<string, TabComponent> = {
   claimableBalances: ClaimableBalances,
 }
 
-function NotificationBell({ onClick }: { onClick: () => void }) {
+function NotificationBell({ onClick, bottomOffset = '20px' }: { onClick: () => void; bottomOffset?: string }) {
   const { unreadCount } = useRealTimeNotifications()
   return (
     <button
@@ -138,9 +140,9 @@ function NotificationBell({ onClick }: { onClick: () => void }) {
       style={{
         position: 'fixed',
         right: '20px',
-        bottom: '20px',
-        width: '44px',
-        height: '44px',
+        bottom: bottomOffset,
+        width: '48px',
+        height: '48px',
         borderRadius: '50%',
         border: '1px solid var(--border)',
         background: 'var(--bg-card)',
@@ -308,6 +310,15 @@ function DashboardLayout() {
     navigate('/overview')
   }
 
+  // Swipe right from the left edge to open the mobile sidebar
+  const swipeAreaRef = useSwipeGesture<HTMLDivElement>({
+    onSwipeRight: useCallback(() => {
+      if (isMobile && !isMobileMenuOpen) setMobileMenuOpen(true)
+    }, [isMobile, isMobileMenuOpen, setMobileMenuOpen]),
+    threshold: 40,
+    restraint: 120,
+  })
+
   return (
     <ErrorBoundary onRetry={handleRetry} maxRetries={3}>
       <div
@@ -320,7 +331,7 @@ function DashboardLayout() {
       >
         {isMobile && <MobileHeader />}
         {isMobile ? <MobileSidebar /> : <Sidebar />}
-        <main style={getMainStyles()}>
+        <main style={getMainStyles()} ref={isMobile ? swipeAreaRef : null}>
           <KeyboardNavigation />
           <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ flex: 1 }}>
@@ -356,7 +367,10 @@ function DashboardLayout() {
           </ErrorBoundary>
         </main>
         <TourLauncher />
-        <NotificationBell onClick={() => setNotificationsOpen(true)} />
+        <NotificationBell
+          onClick={() => setNotificationsOpen(true)}
+          bottomOffset={isMobile ? 'calc(60px + 16px)' : '20px'}
+        />
         <RealTimeNotificationCenter
           open={notificationsOpen}
           onClose={() => setNotificationsOpen(false)}
