@@ -11,7 +11,13 @@ import { useNavigate } from "react-router-dom";
 import { useStore } from "../../lib/store";
 import { useSwipeGesture } from "../../hooks/useSwipeGesture";
 
-const NAV_ITEMS = [
+interface NavItem {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { id: "overview", label: "Overview", icon: "◈" },
   { id: "account", label: "Account", icon: "◉" },
   { id: "compare", label: "Compare", icon: "◫" },
@@ -79,7 +85,7 @@ export default function MobileSidebar() {
   const navigate = useNavigate();
   const { activeTab, isMobileMenuOpen, setMobileMenuOpen, theme, toggleTheme, network } =
     useStore();
-  const drawerRef = useRef(null);
+  const drawerRef = useRef<HTMLElement>(null);
 
   const close = useCallback(() => setMobileMenuOpen(false), [setMobileMenuOpen]);
 
@@ -104,7 +110,7 @@ export default function MobileSidebar() {
   // Close on Escape
   useEffect(() => {
     if (!isMobileMenuOpen) return;
-    const handler = (e) => { if (e.key === "Escape") close(); };
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [isMobileMenuOpen, close]);
@@ -112,7 +118,7 @@ export default function MobileSidebar() {
   // Focus first nav item when opening
   useEffect(() => {
     if (!isMobileMenuOpen) return;
-    const first = drawerRef.current?.querySelector("button, a");
+    const first = drawerRef.current?.querySelector("button, a") as HTMLElement | null;
     first?.focus();
   }, [isMobileMenuOpen]);
 

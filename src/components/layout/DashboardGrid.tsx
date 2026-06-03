@@ -4,6 +4,33 @@ import { useResponsive } from '../../hooks/useResponsive';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
 import { addBreadcrumb } from '../../lib/errorReporting';
 
+export interface Widget {
+  id: string;
+  type?: string;
+  component: React.ReactNode;
+  width?: number;
+  height?: number;
+  span?: number;
+}
+
+export interface GridColumns {
+  mobile: number;
+  tablet: number;
+  desktop: number;
+}
+
+export interface DashboardGridProps {
+  widgets?: Widget[];
+  onLayoutChange?: (layout: Widget[]) => void;
+  onWidgetResize?: (widget: Widget, size: { height: number; span: number }) => void;
+  onWidgetRemove?: (widget: Widget) => void;
+  editable?: boolean;
+  columns?: GridColumns;
+  gap?: number;
+  minWidgetHeight?: number;
+  rowHeight?: number;
+}
+
 /**
  * Customizable responsive dashboard grid with drag-and-drop and resizable widgets.
  * Width resizing persists as a grid column span so layouts stay fluid at every breakpoint.
@@ -18,17 +45,24 @@ export default function DashboardGrid({
   gap = 16,
   minWidgetHeight = 200,
   rowHeight = 80,
-}) {
-  const [layout, setLayout] = useState(widgets);
-  const [draggedWidget, setDraggedWidget] = useState(null);
-  const [dragOverIndex, setDragOverIndex] = useState(null);
-  const [resizingWidget, setResizingWidget] = useState(null);
+}: DashboardGridProps) {
+  const [layout, setLayout] = useState<Widget[]>(widgets);
+  const [draggedWidget, setDraggedWidget] = useState<{ widget: Widget; index: number } | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [resizingWidget, setResizingWidget] = useState<{ widget: Widget; index: number, initialSpan: number } | null>(null);
   const [resizeStartPos, setResizeStartPos] = useState({ x: 0, y: 0 });
   const [resizeStartSize, setResizeStartSize] = useState({ width: 0, height: 0 });
 
-  const gridRef = useRef(null);
-  const { isMobile, isTablet } = useResponsive();
+  const gridRef = useRef<HTMLDivElement>(null);
+  const { isMobile, isTablet } = useResponsive() as { isMobile: boolean; isTablet: boolean };
   const { handleError } = useErrorHandler('DashboardGrid');
+
+  // Get responsive column count
+  const getColumnCount = (): number => {
+    if (isMobile) return columns.mobile;
+    if (isTablet) return columns.tablet;
+    return columns.desktop;
+  };
 
   useEffect(() => {
     setLayout(widgets);
@@ -48,7 +82,8 @@ export default function DashboardGrid({
     return (gridWidth - gap * (columnCount - 1)) / columnCount;
   }, [columnCount, gap]);
 
-  const updateLayout = useCallback((newLayout) => {
+  // Handle layout changes
+  const updateLayout = useCallback((newLayout: Widget[]) => {
     setLayout(newLayout);
     onLayoutChange?.(newLayout);
     addBreadcrumb('Dashboard layout updated', 'user_action', {
@@ -57,13 +92,13 @@ export default function DashboardGrid({
     });
   }, [onLayoutChange, editable]);
 
-  const handleDragStart = (event, widget, index) => {
+  const handleDragStart = (event: React.DragEvent<HTMLDivElement>, widget: Widget, index: number) => {
     if (!editable) return;
 
     setDraggedWidget({ widget, index });
     event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', widget.id);
-    event.currentTarget.style.opacity = '0.5';
+    event.dataTransfer.setData('text/html', (event.target as HTMLElement).outerHTML);
+    (event.currentTarget as HTMLElement).style.opacity = '0.5';
 
     addBreadcrumb('Widget drag started', 'user_action', {
       widgetId: widget.id,
@@ -71,13 +106,13 @@ export default function DashboardGrid({
     });
   };
 
-  const handleDragEnd = (event) => {
-    event.currentTarget.style.opacity = '1';
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    (event.currentTarget as HTMLElement).style.opacity = '1';
     setDraggedWidget(null);
     setDragOverIndex(null);
   };
 
-  const handleDragOver = (event, index) => {
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>, index: number) => {
     if (!editable || !draggedWidget) return;
 
     event.preventDefault();
@@ -85,7 +120,7 @@ export default function DashboardGrid({
     setDragOverIndex(index);
   };
 
-  const handleDrop = (event, dropIndex) => {
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
     if (!editable || !draggedWidget) return;
 
     event.preventDefault();
@@ -107,13 +142,13 @@ export default function DashboardGrid({
     });
   };
 
-  const handleResizeStart = (event, widget, index) => {
+  const handleResizeStart = (event: React.MouseEvent<HTMLButtonElement>, widget: Widget, index: number) => {
     if (!editable) return;
 
     event.preventDefault();
     event.stopPropagation();
 
-    const rect = event.currentTarget.closest('.widget-container').getBoundingClientRect();
+    const rect = ((event.currentTarget as HTMLElement).closest('.widget-container') as HTMLElement).getBoundingClientRect();
     setResizingWidget({
       widget,
       index,
@@ -127,7 +162,7 @@ export default function DashboardGrid({
     });
   };
 
-  const handleResizeMove = useCallback((event) => {
+  const handleResizeMove = useCallback((event: MouseEvent) => {
     if (!resizingWidget) return;
 
     const deltaX = event.clientX - resizeStartPos.x;
@@ -140,7 +175,7 @@ export default function DashboardGrid({
     const nextSpan = clampSpan(spanFromWidth);
     const nextHeight = Math.max(minWidgetHeight, Math.round(resizeStartSize.height + deltaY));
 
-    const widgetElement = document.querySelector(`[data-widget-id="${resizingWidget.widget.id}"]`);
+    const widgetElement = document.querySelector(`[data-widget-id="${resizingWidget.widget.id}"]`) as HTMLElement;
     if (widgetElement) {
       widgetElement.style.gridColumn = `span ${nextSpan}`;
       widgetElement.style.height = `${nextHeight}px`;
@@ -161,7 +196,7 @@ export default function DashboardGrid({
     if (!resizingWidget) return;
 
     try {
-      const widgetElement = document.querySelector(`[data-widget-id="${resizingWidget.widget.id}"]`);
+      const widgetElement = document.querySelector(`[data-widget-id="${resizingWidget.widget.id}"]`) as HTMLElement;
       if (!widgetElement) return;
 
       const rect = widgetElement.getBoundingClientRect();
@@ -170,7 +205,7 @@ export default function DashboardGrid({
         ? clampSpan(Math.round((rect.width + gap) / (columnWidth + gap)))
         : resizingWidget.initialSpan;
       const nextHeight = Math.max(minWidgetHeight, Math.round(rect.height));
-      const updatedWidget = {
+      const updatedWidget: Widget = {
         ...resizingWidget.widget,
         span: nextSpan,
         height: nextHeight,
@@ -216,7 +251,8 @@ export default function DashboardGrid({
     };
   }, [resizingWidget, handleResizeMove, handleResizeEnd]);
 
-  const handleRemoveWidget = (widget, index) => {
+  // Remove widget
+  const handleRemoveWidget = (widget: Widget, index: number) => {
     if (!editable) return;
 
     const newLayout = layout.filter((_, i) => i !== index);
@@ -225,11 +261,11 @@ export default function DashboardGrid({
 
     addBreadcrumb('Widget removed', 'user_action', {
       widgetId: widget.id,
-      widgetType: widget.type,
+      widgetType: widget.type
     });
   };
 
-  const gridStyles = {
+  const gridStyles: React.CSSProperties = {
     display: 'grid',
     gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
     gridAutoRows: `${rowHeight}px`,
@@ -242,11 +278,11 @@ export default function DashboardGrid({
     transition: 'grid-template-columns 180ms ease, gap 180ms ease',
   };
 
-  const getWidgetStyles = (widget, index) => {
+  const getWidgetStyles = (widget: Widget, index: number): React.CSSProperties => {
     const height = Math.max(Number(widget.height) || minWidgetHeight, minWidgetHeight);
     const rowSpan = Math.max(1, Math.ceil((height + gap) / (rowHeight + gap)));
     const isResizing = resizingWidget?.index === index;
-    const baseStyles = {
+    const baseStyles: React.CSSProperties = {
       position: 'relative',
       minHeight: `${minWidgetHeight}px`,
       background: 'var(--bg-card)',
@@ -316,7 +352,7 @@ export default function DashboardGrid({
                 gap: '4px',
                 zIndex: 10,
                 opacity: 0,
-                transition: 'opacity var(--transition)',
+                transition: 'opacity var(--transition)'
               }}
               className="widget-controls"
             >
@@ -368,11 +404,6 @@ export default function DashboardGrid({
             {widget.component}
           </div>
 
-          <style jsx>{`
-            .widget-container:hover .widget-controls {
-              opacity: 1;
-            }
-          `}</style>
         </div>
       ))}
 

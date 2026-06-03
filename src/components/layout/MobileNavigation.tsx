@@ -1,15 +1,21 @@
-import React from 'react'
+import React from 'react';
+import { useStore } from '../../lib/store';
 import { useNavigate } from 'react-router-dom'
-import { useStore } from '../../lib/store'
+
+interface NavItem {
+  id: string;
+  label: string;
+  icon: string;
+}
 
 // Mirrors the most-used tabs; full nav is in the sidebar (hamburger menu).
-const QUICK_NAV = [
-  { id: 'overview',      label: 'Home',    icon: '◈' },
-  { id: 'transactions',  label: 'Txns',    icon: '⇄' },
-  { id: 'dex',           label: 'DEX',     icon: '⇌' },
-  { id: 'wallet',        label: 'Wallet',  icon: '⊡' },
-  { id: 'settings',      label: 'More',    icon: '⚙' },
-]
+const QUICK_NAV: NavItem[] = [
+  { id: 'overview',      label: 'Home',     icon: '◈' },
+  { id: 'transactions',  label: 'Txns',     icon: '⇄' },
+  { id: 'dex',           label: 'DEX',      icon: '⇌' },
+  { id: 'wallet',        label: 'Wallet',   icon: '⊡' },
+  { id: 'settings',      label: 'More', icon: '⚙' },
+];
 
 export default function MobileNavigation() {
   const { activeTab, setActiveTab } = useStore()
@@ -27,7 +33,7 @@ export default function MobileNavigation() {
       aria-label="Quick navigation"
     >
       {QUICK_NAV.map((item) => {
-        const isActive = activeTab === item.id
+        const isActive = activeTab === item.id;
         return (
           <button
             key={item.id}
@@ -50,7 +56,6 @@ export default function MobileNavigation() {
               cursor: 'pointer',
               transition: 'color 180ms ease, transform 100ms ease',
               padding: '4px 0',
-              position: 'relative',
             }}
             onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.92)' }}
             onTouchEnd={e => { e.currentTarget.style.transform = '' }}
@@ -72,8 +77,8 @@ export default function MobileNavigation() {
               }} />
             )}
           </button>
-        )
+        );
       })}
     </nav>
-  )
+  );
 }
