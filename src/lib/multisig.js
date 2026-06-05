@@ -6,6 +6,7 @@
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { getServer, NETWORKS } from './stellar';
 import { getStoredValue, setStoredValue } from './storage';
+import { measureAsync, recordCustomMetric } from './performanceMonitoring';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -184,7 +185,13 @@ export function addSignatureToXdr(txXdr, signerSecret, network = 'testnet') {
   const networkPassphrase = NETWORKS[network].passphrase;
   const tx = StellarSdk.TransactionBuilder.fromXDR(txXdr, networkPassphrase);
   const keypair = StellarSdk.Keypair.fromSecret(signerSecret);
+  const start = performance.now();
   tx.sign(keypair);
+  recordCustomMetric('TRANSACTION_SIGNING_DURATION', performance.now() - start, {
+    network,
+    signer: 'multisig-local-keypair',
+    signatureCount: tx.signatures.length,
+  });
   return tx.toXDR();
 }
 
@@ -236,7 +243,15 @@ export async function submitMultisigTransaction(txXdr, network = 'testnet') {
   const networkPassphrase = NETWORKS[network].passphrase;
   const server = getServer(network);
   const tx = StellarSdk.TransactionBuilder.fromXDR(txXdr, networkPassphrase);
-  return server.submitTransaction(tx);
+  return measureAsync(
+    'TRANSACTION_SUBMIT_DURATION',
+    () => server.submitTransaction(tx),
+    {
+      network,
+      operationCount: tx.operations?.length || 0,
+      source: 'multisig',
+    },
+  );
 }
 
 // ─── Session Management (IndexedDB) ──────────────────────────────────────────
